@@ -38,3 +38,6 @@ out/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
+
+# Audit logs
+log/log.xml
