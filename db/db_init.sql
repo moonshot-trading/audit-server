@@ -28,22 +28,19 @@ CREATE TYPE log_type as ENUM (
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (
-  id                  serial PRIMARY KEY,
-  time                TIMESTAMP,
-  type                log_type,
-  server              VARCHAR(10),
-  t_id                INT,
-  command             command,
-  u_id                INT,
-  user_name           VARCHAR(20),
-  stock_symbol        VARCHAR(3),
-  filename            VARCHAR(20),
-  funds               money,
-  cryptokey           VARCHAR(20),
-  amount              NUMERIC,
-  price               money,
-  quote_server_time   INT,
-  action              VARCHAR(20),
-  error_message       VARCHAR(100),
-  debug_message       VARCHAR(100)
+  transactionNum    serial PRIMARY KEY,
+  timestamp         TIMESTAMP,
+  logType           log_type,
+  server            VARCHAR(20),
+  command           command,
+  username          VARCHAR(20),
+  stockSymbol       VARCHAR(3),
+  filename          VARCHAR(20),
+  funds             money,
+  cryptokey         VARCHAR(20),
+  price             money,
+  quoteServerTime   BIGINT,
+  action            VARCHAR(20),
+  errorMessage      VARCHAR(100),
+  debugMessage      VARCHAR(100)
 );
