@@ -1,0 +1,154 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+ <xsd:annotation>
+  <xsd:documentation xml:lang="en">
+   Log file schema for SEng 462 at the University of Victoria.
+  </xsd:documentation>
+ </xsd:annotation>
+
+ <xsd:element name="log" type="LogType"/> 
+
+<!-- The log file created by the students consists of user commands, quote server
+ hits, account changes, system events, error messages and debug messages -->
+ <xsd:complexType name="LogType">
+  <xsd:choice minOccurs="0" maxOccurs="unbounded">
+   <xsd:element name="userCommand" type="UserCommandType"/>
+   <xsd:element name="quoteServer" type="QuoteServerType"/>
+   <xsd:element name="accountTransaction" type="AccountTransactionType"/>
+   <xsd:element name="systemEvent" type="SystemEventType"/>
+   <xsd:element name="errorEvent" type="ErrorEventType"/>
+   <xsd:element name="debugEvent" type="DebugType"/>
+  </xsd:choice>
+ </xsd:complexType>
+
+<!-- User commands come from the user command files or from manual entries in 
+the students' web forms -->
+ <xsd:complexType name="UserCommandType">
+  <xsd:all>
+   <xsd:element name="timestamp" type="unixTimeLimits"/>
+   <xsd:element name="server" type="xsd:string"/>
+   <xsd:element name="transactionNum" type="xsd:positiveInteger"/>
+   <xsd:element name="command" type="commandType"/>
+   <xsd:element name="username" type="xsd:string" minOccurs="0"/>
+   <xsd:element name="stockSymbol" type="stockSymbolType" minOccurs="0"/>
+   <xsd:element name="filename" type="xsd:string" minOccurs="0"/>
+   <xsd:element name="funds" type="xsd:decimal" minOccurs="0"/>
+  </xsd:all>
+ </xsd:complexType>
+
+<!-- Every hit to the quote server requires a log entry with the results. The 
+price, symbol, username, timestamp and cryptokey are as returned by the quote server -->
+ <xsd:complexType name="QuoteServerType">
+  <xsd:all>
+   <xsd:element name="timestamp" type="unixTimeLimits"/>
+   <xsd:element name="server" type="xsd:string"/>
+   <xsd:element name="transactionNum" type="xsd:positiveInteger"/>
+   <xsd:element name="price" type="xsd:decimal"/>
+   <xsd:element name="stockSymbol" type="stockSymbolType"/>
+   <xsd:element name="username" type="xsd:string"/>
+   <xsd:element name="quoteServerTime" type="xsd:integer"/>
+   <xsd:element name="cryptokey" type="xsd:string"/>
+  </xsd:all>
+ </xsd:complexType>
+
+<!-- Any time a user's account is touched, an account message is printed.  
+Appropriate actions are "add" or "remove". -->
+ <xsd:complexType name="AccountTransactionType">
+  <xsd:all>
+   <xsd:element name="timestamp" type="unixTimeLimits"/>
+   <xsd:element name="server" type="xsd:string"/>
+   <xsd:element name="transactionNum" type="xsd:positiveInteger"/>
+   <xsd:element name="action" type="xsd:string"/>
+   <xsd:element name="username" type="xsd:string"/> 
+   <xsd:element name="funds" type="xsd:decimal"/>
+  </xsd:all>
+ </xsd:complexType>
+
+<!-- System events can be current user commands, interserver communications, 
+or the execution of previously set triggers -->
+ <xsd:complexType name="SystemEventType">
+  <xsd:all>
+   <xsd:element name="timestamp" type="unixTimeLimits"/>
+   <xsd:element name="server" type="xsd:string"/>
+   <xsd:element name="transactionNum" type="xsd:positiveInteger"/>
+   <xsd:element name="command" type="commandType"/>
+   <xsd:element name="username" type="xsd:string" minOccurs="0"/>
+   <xsd:element name="stockSymbol" type="stockSymbolType" minOccurs="0"/>
+   <xsd:element name="filename" type="xsd:string" minOccurs="0"/>
+   <xsd:element name="funds" type="xsd:decimal" minOccurs="0"/>
+  </xsd:all>
+ </xsd:complexType>
+
+<!-- Error messages contain all the information of user commands, in 
+addition to an optional error message -->
+ <xsd:complexType name="ErrorEventType">
+  <xsd:all>
+   <xsd:element name="timestamp" type="unixTimeLimits"/>
+   <xsd:element name="server" type="xsd:string"/>
+   <xsd:element name="transactionNum" type="xsd:positiveInteger"/>
+   <xsd:element name="command" type="commandType"/>
+   <xsd:element name="username" type="xsd:string" minOccurs="0"/>
+   <xsd:element name="stockSymbol" type="stockSymbolType" minOccurs="0"/>
+   <xsd:element name="filename" type="xsd:string" minOccurs="0"/>
+   <xsd:element name="funds" type="xsd:decimal" minOccurs="0"/>
+   <xsd:element name="errorMessage" type="xsd:string" minOccurs="0"/>
+  </xsd:all> 
+ </xsd:complexType>
+
+<!-- Debugging messages contain all the information of user commands, in 
+addition to an optional debug message -->
+ <xsd:complexType name="DebugType">
+  <xsd:all>
+   <xsd:element name="timestamp" type="unixTimeLimits"/>
+   <xsd:element name="server" type="xsd:string"/>
+   <xsd:element name="transactionNum" type="xsd:positiveInteger"/>
+   <xsd:element name="command" type="commandType"/>
+   <xsd:element name="username" type="xsd:string" minOccurs="0"/>
+   <xsd:element name="stockSymbol" type="stockSymbolType" minOccurs="0"/>
+   <xsd:element name="filename" type="xsd:string" minOccurs="0"/>
+   <xsd:element name="funds" type="xsd:decimal" minOccurs="0"/>
+   <xsd:element name="debugMessage" type="xsd:string" minOccurs="0"/>
+  </xsd:all>
+ </xsd:complexType>
+
+<!-- All Unix timestamps provided must be within the current semester -->
+ <xsd:simpleType name="unixTimeLimits">
+  <xsd:restriction base="xsd:integer">
+
+      <xsd:minInclusive value="1514764800000"/> <!-- Jan 1, 2018-->
+      <xsd:maxInclusive value="1525132800000"/> <!-- May 1, 2018 -->
+
+
+</xsd:restriction>
+ </xsd:simpleType>
+
+<!-- Stock symbols are always three or fewer letters long -->
+ <xsd:simpleType name="stockSymbolType">
+  <xsd:restriction base="xsd:string">
+   <xsd:maxLength value="3"/>
+  </xsd:restriction>
+ </xsd:simpleType>
+
+<!-- Enumeration of the very specific commands accepted in the system -->
+ <xsd:simpleType name="commandType">
+  <xsd:restriction base="xsd:string">
+   <xsd:enumeration value="ADD"/>
+   <xsd:enumeration value="QUOTE"/>
+   <xsd:enumeration value="BUY"/>
+   <xsd:enumeration value="COMMIT_BUY"/>
+   <xsd:enumeration value="CANCEL_BUY"/>
+   <xsd:enumeration value="SELL"/>
+   <xsd:enumeration value="COMMIT_SELL"/>
+   <xsd:enumeration value="CANCEL_SELL"/>
+   <xsd:enumeration value="SET_BUY_AMOUNT"/>
+   <xsd:enumeration value="CANCEL_SET_BUY"/>
+   <xsd:enumeration value="SET_BUY_TRIGGER"/>
+   <xsd:enumeration value="SET_SELL_AMOUNT"/>
+   <xsd:enumeration value="SET_SELL_TRIGGER"/>
+   <xsd:enumeration value="CANCEL_SET_SELL"/>
+   <xsd:enumeration value="DUMPLOG"/>
+   <xsd:enumeration value="DISPLAY_SUMMARY"/>
+  </xsd:restriction>
+ </xsd:simpleType>
+
+</xsd:schema>
