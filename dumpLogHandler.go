@@ -69,7 +69,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil { failGracefully(err, "Failed to open log file ") }
 	defer f.Close()
 
-	rows, err := db.Query("SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT, server, transactionNum, command, username, stockSymbol, filename, ((funds::DECIMAL)*100)::BIGINT, cryptokey, price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log;")
+	rows, err := db.Query("SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, ((funds::DECIMAL)*100)::BIGINT as funds, cryptokey, ((price::DECIMAL)*100)::BIGINT as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log;")
 	if err != nil { failGracefully(err, "Failed to query audit DB ") }
 	defer rows.Close()
 
