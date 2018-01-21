@@ -1,0 +1,11 @@
+language: go
+
+go:
+  - 1.6.2
+
+install:
+  - go get
+  - go build .
+
+notifications:
+  email: false
