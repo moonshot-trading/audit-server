@@ -5,7 +5,7 @@ import (
 )
 
 func initRoutes() {
-	port := ":8088"
+	port := ":44417"
 	http.HandleFunc("/dumpLog", dumpLogHandler)
 	http.HandleFunc("/userCommand", userCommandHandler)
 	http.HandleFunc("/quoteServer", quoteServerHandler)
