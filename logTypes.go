@@ -24,8 +24,8 @@ type logDB struct {
 	Action			sql.NullString		`paramName:"action"`
 	ErrorMessage	sql.NullString		`paramName:"errorMessage"`
 	DebugMessage	sql.NullString		`paramName:"debugMessage"`
-	Funds			sql.NullInt64		`paramName:"funds"`
-	Price			sql.NullInt64		`paramName:"price"`
+	Funds			sql.NullFloat64		`paramName:"funds"`
+	Price			sql.NullFloat64		`paramName:"price"`
 	QuoteServerTime	sql.NullInt64		`paramName:"quoteServerTime"`
 }
 
@@ -37,14 +37,14 @@ type userCommand struct {
 	Username		string		`json:"username"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Filename		string		`json:"filename"`
-	Funds			int64		`json:"funds"`
+	Funds			float64		`json:"funds"`
 }
 
 type quoteServer struct {
 	Timestamp		int64		`json:"timestamp"`
 	Server			string		`json:"server"`
 	TransactionNum	int			`json:"transactionNum"`
-	Price			int64		`json:"price"`
+	Price			float64		`json:"price"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Username		string		`json:"username"`
 	QuoteServerTime	int64		`json:"quoteServerTime"`
@@ -57,7 +57,7 @@ type accountTransaction struct {
 	TransactionNum	int			`json:"transactionNum"`
 	Action			string		`json:"action"`
 	Username		string		`json:"username"`
-	Funds			int64		`json:"funds"`
+	Funds			float64		`json:"funds"`
 }
 
 type systemEvent struct {
@@ -68,7 +68,7 @@ type systemEvent struct {
 	Username		string		`json:"username"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Filename		string		`json:"filename"`
-	Funds			int64		`json:"funds"`
+	Funds			float64		`json:"funds"`
 }
 
 type errorEvent	struct {
@@ -79,7 +79,7 @@ type errorEvent	struct {
 	Username		string		`json:"username"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Filename		string		`json:"filename"`
-	Funds			int64		`json:"funds"`
+	Funds			float64		`json:"funds"`
 	ErrorMessage	string		`json:"errorMessage"`
 }
 
@@ -91,6 +91,6 @@ type debugEvent	struct {
 	Username		string		`json:"username"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Filename		string		`json:"filename"`
-	Funds			int64		`json:"funds"`
+	Funds			float64		`json:"funds"`
 	DebugMessage	string		`json:"debugMessage"`
 }
