@@ -41,3 +41,7 @@ out/
 
 # Audit logs
 log/log.xml
+
+#SSL
+*.crt
+*.key
