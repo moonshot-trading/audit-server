@@ -77,6 +77,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil { failGracefully(err, "Failed to query audit DB ") }
 	defer rows.Close()
 
+	f.Write([]byte("<?xml version=\"1.0\"?>\n"))
 	f.Write([]byte("<log>\n"))
 	for rows.Next() {
 		var r logDB

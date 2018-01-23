@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"log"
 )
 
 func initRoutes() {
@@ -14,5 +15,9 @@ func initRoutes() {
 	http.HandleFunc("/errorEvent", errorEventHandler)
 	http.HandleFunc("/debugEvent", debugEventHandler)
 
-	http.ListenAndServe(port, nil)
+	err := http.ListenAndServeTLS(port, "server.crt", "server.key", nil)
+
+	if err != nil {
+		log.Fatal("ListenAndServer: ", err)
+	}
 }
