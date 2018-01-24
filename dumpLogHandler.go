@@ -45,6 +45,8 @@ func structToMap(i interface{}) (values logEntry){
 		case sql.NullFloat64:
 			if f.Field(1).Bool(){
 				v = strconv.FormatFloat(f.Field(0).Float(), 'f', 2, 64)
+			} else {
+				continue
 			}
 		default:
 			v = fmt.Sprint(f.Interface())
@@ -73,10 +75,11 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil { failGracefully(err, "Failed to open log file ") }
 	defer f.Close()
 
-	rows, err := db.Query("SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100, cryptokey, (price::DECIMAL)/100, quoteServerTime, action, errorMessage, debugMessage FROM audit_log;")
+	rows, err := db.Query("SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log;")
 	if err != nil { failGracefully(err, "Failed to query audit DB ") }
 	defer rows.Close()
 
+	f.Write([]byte("<?xml version=\"1.0\"?>\n"))
 	f.Write([]byte("<log>\n"))
 	for rows.Next() {
 		var r logDB
