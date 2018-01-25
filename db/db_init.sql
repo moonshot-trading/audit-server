@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
   stockSymbol       VARCHAR(3),
   filename          VARCHAR(20),
   funds             INT,
-  cryptokey         VARCHAR(32),
+  cryptokey         VARCHAR(64),
   price             INT,
   quoteServerTime   BIGINT,
   action            VARCHAR(20),
