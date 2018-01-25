@@ -28,7 +28,8 @@ CREATE TYPE log_type as ENUM (
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (
-  transactionNum    serial PRIMARY KEY,
+  t_id              SERIAL PRIMARY KEY,
+  transactionNum    INT,
   timestamp         TIMESTAMP,
   logType           log_type,
   server            VARCHAR(20),
