@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"fmt"
 	"io"
+	"encoding/json"
 )
 
 func (s logEntry) MarshalXML( e *xml.Encoder, start xml.StartElement) error {
@@ -76,6 +77,38 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 
 	rows, err := db.Query("SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log;")
+	if err != nil { failGracefully(err, "Failed to query audit DB ") }
+	defer rows.Close()
+
+	f.Write([]byte("<?xml version=\"1.0\"?>\n"))
+	f.Write([]byte("<log>\n"))
+	for rows.Next() {
+		var r logDB
+		err = rows.Scan(&r.LogType, &r.Timestamp, &r.Server, &r.TransactionNum, &r.Command, &r.Username, &r.StockSymbol, &r.Filename, &r.Funds, &r.Cryptokey, &r.Price, &r.QuoteServerTime, &r.Action, &r.ErrorMessage, &r.DebugMessage)
+		writeToXML(f, r)
+	}
+	f.Write([]byte("</log>\n"))
+}
+
+func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	res := struct{
+		User   string   `json:"user"`
+	}{""}
+	err := decoder.Decode(&res)
+	if err != nil {
+		failWithStatusCode(err, http.StatusText(http.StatusBadRequest), w, http.StatusBadRequest)
+		return
+	}
+
+	f, err := os.Create("log/log"+ res.User + ".xml")
+	if err != nil { failGracefully(err, "Failed to open log file ") }
+	defer f.Close()
+
+	queryString := "SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log WHERE username = $1;"
+	stmt, err := db.Prepare(queryString)
+
+	rows, err := stmt.Query(res.User)
 	if err != nil { failGracefully(err, "Failed to query audit DB ") }
 	defer rows.Close()
 

@@ -40,4 +40,4 @@ out/
 .idea_modules/
 
 # Audit logs
-log/log.xml
+log/*.xml
