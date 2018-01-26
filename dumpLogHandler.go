@@ -71,7 +71,7 @@ func writeToXML(w io.Writer, r logDB) {
 }
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
-
+	logDumpCommand(w)
 	f, err := os.Create("log/log.xml")
 	if err != nil { failGracefully(err, "Failed to open log file ") }
 	defer f.Close()
@@ -121,4 +121,14 @@ func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	f.Write([]byte("</log>\n"))
 
+}
+
+func logDumpCommand(w http.ResponseWriter){
+
+	queryString := "INSERT INTO audit_log(timestamp, transactionnum, server, command, filename, logtype) VALUES (now(), $1, $2, $3, $4, 'userCommand')"
+	stmt, err := db.Prepare(queryString)
+
+	res, err := stmt.Exec(1, 100, "DUMPLOG", "1userWorkLoad")
+
+	checkErrors(res, err, w)
 }
