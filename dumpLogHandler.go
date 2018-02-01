@@ -150,5 +150,4 @@ func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 		writeToXML(f, r)
 	}
 	f.Write([]byte("</log>\n"))
-
 }
