@@ -71,7 +71,27 @@ func writeToXML(w io.Writer, r logDB) {
 }
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
-	logDumpCommand(w)
+	decoder := json.NewDecoder(r.Body)
+	res := struct{
+		Server          string   `json:"server"`
+		Filename        string   `json:"filename"`
+		TransactionNum  int      `json:"transactionNum"`
+	}{"", "", -1}
+
+	err := decoder.Decode(&res)
+
+	if err != nil {
+		failWithStatusCode(err, http.StatusText(http.StatusBadRequest), w, http.StatusBadRequest)
+		return
+	}
+
+	queryString := "INSERT INTO audit_log(timestamp, transactionnum, server, command, filename, logtype) VALUES (now(), $1, $2, $3, $4, 'userCommand')"
+	stmt, err := db.Prepare(queryString)
+
+	dbres, err := stmt.Exec(res.TransactionNum, res.Server, "DUMPLOG", res.Filename)
+
+	checkErrors(dbres, err, w)
+
 	f, err := os.Create("log/log.xml")
 	if err != nil { failGracefully(err, "Failed to open log file ") }
 	defer f.Close()
@@ -93,22 +113,32 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	res := struct{
-		User   string   `json:"user"`
-	}{""}
+		Username        string   `json:"username"`
+		Server          string   `json:"server"`
+		Filename        string   `json:"filename"`
+		TransactionNum  int      `json:"transactionNum"`
+	}{"", "", "", -1}
 	err := decoder.Decode(&res)
 	if err != nil {
 		failWithStatusCode(err, http.StatusText(http.StatusBadRequest), w, http.StatusBadRequest)
 		return
 	}
 
-	f, err := os.Create("log/log"+ res.User + ".xml")
+	queryString := "INSERT INTO audit_log(timestamp, transactionnum, server, command, filename, username, logtype) VALUES (now(), $1, $2, $3, $4, $5, 'userCommand')"
+	stmt, err := db.Prepare(queryString)
+
+	dbres, err := stmt.Exec(res.TransactionNum, res.Server, "DUMPLOG", res.Filename, res.Username)
+
+	checkErrors(dbres, err, w)
+
+	f, err := os.Create("log/log"+ res.Username + ".xml")
 	if err != nil { failGracefully(err, "Failed to open log file ") }
 	defer f.Close()
 
-	queryString := "SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log WHERE username = $1;"
-	stmt, err := db.Prepare(queryString)
+	queryString = "SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log WHERE username = $1;"
+	stmt, err = db.Prepare(queryString)
 
-	rows, err := stmt.Query(res.User)
+	rows, err := stmt.Query(res.Username)
 	if err != nil { failGracefully(err, "Failed to query audit DB ") }
 	defer rows.Close()
 
@@ -120,15 +150,4 @@ func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 		writeToXML(f, r)
 	}
 	f.Write([]byte("</log>\n"))
-
-}
-
-func logDumpCommand(w http.ResponseWriter){
-
-	queryString := "INSERT INTO audit_log(timestamp, transactionnum, server, command, filename, logtype) VALUES (now(), $1, $2, $3, $4, 'userCommand')"
-	stmt, err := db.Prepare(queryString)
-
-	res, err := stmt.Exec(1, 100, "DUMPLOG", "1userWorkLoad")
-
-	checkErrors(res, err, w)
 }
