@@ -72,14 +72,13 @@ func writeToXML(w io.Writer, r logDB) {
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	logDumpCommand(w)
-	f, err := os.Create("log/log.xml")
+	f, err := os.Create("/go/src/github.com/moonshot-trading/audit-server/log.xml")
 	if err != nil { failGracefully(err, "Failed to open log file ") }
-	defer f.Close()
 
 	rows, err := db.Query("SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log;")
 	if err != nil { failGracefully(err, "Failed to query audit DB ") }
 	defer rows.Close()
-
+	fmt.Println("dumpin")
 	f.Write([]byte("<?xml version=\"1.0\"?>\n"))
 	f.Write([]byte("<log>\n"))
 	for rows.Next() {
@@ -88,6 +87,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 		writeToXML(f, r)
 	}
 	f.Write([]byte("</log>\n"))
+	f.Close()
 }
 
 func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -101,9 +101,8 @@ func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f, err := os.Create("log/log"+ res.User + ".xml")
+	f, err := os.Create("/go/src/github.com/moonshot-trading/audit-server/log"+ res.User + ".xml")
 	if err != nil { failGracefully(err, "Failed to open log file ") }
-	defer f.Close()
 
 	queryString := "SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log WHERE username = $1;"
 	stmt, err := db.Prepare(queryString)
@@ -120,7 +119,7 @@ func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 		writeToXML(f, r)
 	}
 	f.Write([]byte("</log>\n"))
-
+	f.Close()
 }
 
 func logDumpCommand(w http.ResponseWriter){
