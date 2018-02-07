@@ -71,14 +71,13 @@ func writeToXML(w io.Writer, r logDB) {
 }
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
-	logDumpCommand(w)
-	f, err := os.Create("/go/src/github.com/moonshot-trading/audit-server/log.xml")
+	logDumpCommand(w, r)
+	f, err := os.Create("log.xml")
 	if err != nil { failGracefully(err, "Failed to open log file ") }
 
 	rows, err := db.Query("SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log;")
 	if err != nil { failGracefully(err, "Failed to query audit DB ") }
 	defer rows.Close()
-	fmt.Println("dumpin")
 	f.Write([]byte("<?xml version=\"1.0\"?>\n"))
 	f.Write([]byte("<log>\n"))
 	for rows.Next() {
@@ -91,17 +90,18 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
+	logDumpCommand(w, r)
 	decoder := json.NewDecoder(r.Body)
 	res := struct{
-		User   string   `json:"user"`
-	}{""}
+		User   string   `json:"username"`
+	}{"username"}
 	err := decoder.Decode(&res)
 	if err != nil {
 		failWithStatusCode(err, http.StatusText(http.StatusBadRequest), w, http.StatusBadRequest)
 		return
 	}
 
-	f, err := os.Create("/go/src/github.com/moonshot-trading/audit-server/log"+ res.User + ".xml")
+	f, err := os.Create("log"+ res.User + ".xml")
 	if err != nil { failGracefully(err, "Failed to open log file ") }
 
 	queryString := "SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log WHERE username = $1;"
@@ -122,12 +122,25 @@ func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 	f.Close()
 }
 
-func logDumpCommand(w http.ResponseWriter){
+func logDumpCommand(w http.ResponseWriter, r *http.Request){
+
+	decoder := json.NewDecoder(r.Body)
+	res := struct{
+		User            string  `json:"username"`
+		TransactionNum  int     `json:"transactionNum"`
+		Filename        string  `json:"filename"`
+		Server          string  `json:"server"`
+	}{"", -1, FILENAME, SERVER}
+	err := decoder.Decode(&res)
+	if err != nil {
+		failWithStatusCode(err, http.StatusText(http.StatusBadRequest), w, http.StatusBadRequest)
+		return
+	}
 
 	queryString := "INSERT INTO audit_log(timestamp, transactionnum, server, command, filename, logtype) VALUES (now(), $1, $2, $3, $4, 'userCommand')"
 	stmt, err := db.Prepare(queryString)
 
-	res, err := stmt.Exec(1, 100, "DUMPLOG", "1userWorkLoad")
+	resdb, err := stmt.Exec(res.TransactionNum, res.Server, "DUMPLOG", res.Filename)
 
-	checkErrors(res, err, w)
+	checkErrors(resdb, err, w)
 }
