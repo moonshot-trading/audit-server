@@ -1,3 +1,20 @@
+DO
+$body$
+BEGIN
+  IF NOT EXISTS (
+      SELECT                       -- SELECT list can stay empty for this
+      FROM   pg_catalog.pg_user
+      WHERE  usename = 'moonshot') THEN
+
+    CREATE ROLE moonshot LOGIN PASSWORD 'hodl';
+  END IF;
+END
+$body$;
+
+CREATE DATABASE "moonshot-audit";
+GRANT ALL PRIVILEGES ON DATABASE "moonshot-audit" TO moonshot;
+
+\connect moonshot-audit
 
 CREATE TYPE command AS ENUM (
   'ADD',
@@ -24,7 +41,7 @@ CREATE TYPE log_type as ENUM (
   'accountTransaction',
   'systemEvent',
   'errorEvent',
-  'debug'
+  'debugEvent'
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (

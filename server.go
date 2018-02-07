@@ -1,8 +1,5 @@
 package main
 
-//todo: make this less gross
-//todo: convert funds to decimal before logging
-
 import (
 	"database/sql"
 	"fmt"
@@ -11,8 +8,11 @@ import (
 
 var db = loadDB()
 
+const SERVER = "1"
+const FILENAME = "10userWorkLoad"
+
 func loadDB() *sql.DB {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", "localhost", 5432, "moonshot", "hodl", "moonshot-audit")
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", "audit-db", 5432, "moonshot", "hodl", "moonshot-audit")
 
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {failGracefully(err, "Failed to open Postgres ")}
