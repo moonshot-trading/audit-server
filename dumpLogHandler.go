@@ -104,10 +104,10 @@ func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 	f, err := os.Create("log"+ res.User + ".xml")
 	if err != nil { failGracefully(err, "Failed to open log file ") }
 
-	queryString := "SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log WHERE username = $1;"
-	stmt, err := db.Prepare(queryString)
+	queryString = "SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log WHERE username = $1;"
+	stmt, err = db.Prepare(queryString)
 
-	rows, err := stmt.Query(res.User)
+	rows, err := stmt.Query(res.Username)
 	if err != nil { failGracefully(err, "Failed to query audit DB ") }
 	defer rows.Close()
 

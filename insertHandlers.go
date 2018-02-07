@@ -28,7 +28,9 @@ func userCommandHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
+
 	queryString := "INSERT INTO audit_log(timestamp, server, transactionNum, command, username, stockSymbol, filename, funds, logtype) VALUES (now(), $1, $2, $3, $4, $5, $6, $7, 'userCommand')"
+
 	stmt, err := db.Prepare(queryString)
 	
 	res, err := stmt.Exec(d.Server, d.TransactionNum, d.Command, d.Username, d.StockSymbol, d.Filename, d.Funds)

@@ -8,7 +8,8 @@ Any time a user's account is touched, an account message is printed. Appropriate
 	"server":"string",
 	"action": "add" or "remove",
 	"username": "string",
-	"funds": int  //cents
+	"funds": int,  //cents
+	"transactionNum":int
 }
 
 System events can be current user commands, interserver communications, or the execution of previously set triggers
@@ -19,7 +20,8 @@ System events can be current user commands, interserver communications, or the e
 	"stockSymbol": "string", //max three chars
 	"username": "string"
 	"filename": "string",
-	"funds": int  //cents
+	"funds": int,  //cents
+	"transactionNum":int
 }
 
 Error messages contain all the information of user commands, in addition to an optional error message
@@ -31,7 +33,8 @@ Error messages contain all the information of user commands, in addition to an o
 	"filename": "string",
 	"funds": int, //cents
 	"username": "string",
-	"errorMessage": "string"
+	"errorMessage": "string",
+	"transactionNum":int
 }
 
 Debugging messages contain all the information of user commands, in addition to an optional debug message
@@ -45,7 +48,8 @@ Debugging messages contain all the information of user commands, in addition to 
 	"filename": "string",
 	"funds": int, //cents
 	"username": "string",
-	"debugMessage": "string"
+	"debugMessage": "string",
+	"transactionNum":int
 }
 
 Every hit to the quote server requires a log entry with the results. The price, symbol, username, timestamp and cryptokey are as returned by the quote server
@@ -56,7 +60,8 @@ Every hit to the quote server requires a log entry with the results. The price, 
 	"stockSymbol": "string", //max three chars
 	"username": "string",
 	"quoteServerTime": int, //unix time min=1514764800000 max=1525132800000
-	"cryptokey": "string"
+	"cryptokey": "string",
+	"transactionNum":int
 }
 
 User commands come from the user command files or from manual entries in the students' web forms
@@ -68,5 +73,21 @@ User commands come from the user command files or from manual entries in the stu
 	"stockSymbol": "string", //max three chars
 	"filename": "string",
 	"funds": int, //cents
+	"transactionNum":int
+}
+
+/dumpLog
+{
+	"server":"string",
+	"filename":"string",
+	"transactionNum":int
+}
+
+/dumpLogUser
+{
+	"username":"string",
+	"server":"string",
+	"filename":"string",
+	"transactionNum":int
 }
 ```
