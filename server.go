@@ -5,10 +5,10 @@ import (
 	"fmt"
 	_ "github.com/lib/pq"
 )
-
-var config = func() auditConfig { if runningInDocker() {return auditConfig{"audit-db"}} else {return auditConfig{"localhost"}}}()
-var db = loadDB()
-
+var(
+	config = auditConfig{func() string { if runningInDocker() {return "audit-db"} else {return "localhost"}}()}
+	db = loadDB()
+)
 const SERVER = "1"
 const FILENAME = "10userWorkLoad"
 
