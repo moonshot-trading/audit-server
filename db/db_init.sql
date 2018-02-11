@@ -11,6 +11,7 @@ BEGIN
 END
 $body$;
 
+DROP DATABASE IF EXISTS  "moonshot-audit";
 CREATE DATABASE "moonshot-audit";
 GRANT ALL PRIVILEGES ON DATABASE "moonshot-audit" TO moonshot;
 

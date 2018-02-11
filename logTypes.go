@@ -6,6 +6,10 @@ import (
 
 type logEntry map[string]string
 
+type auditConfig struct {
+	db string
+}
+
 type xmlMapEntry struct {
 	XMLName xml.Name
 	Value string `xml:",chardata"`
