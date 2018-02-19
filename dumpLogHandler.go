@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"encoding/json"
+	"fmt"
 )
 
 func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
@@ -23,6 +24,7 @@ func dumpLogHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	f.Write([]byte("</log>\n"))
 	f.Close()
+	fmt.Println("Log Dumped")
 }
 
 func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +67,7 @@ func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	f.Write([]byte("</log>\n"))
 	f.Close()
+	fmt.Println("User Log Dumped")
 }
 
 func logDumpCommand(w http.ResponseWriter, r *http.Request){
