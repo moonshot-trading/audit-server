@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"io"
 	"os"
+	"strings"
 )
 
 func runningInDocker() bool {
@@ -58,8 +59,8 @@ func structToMap(i interface{}) (values logEntry){
 
 		switch f.Interface().(type) {
 		case sql.NullString:
-			if f.Field(1).Bool(){
-				v = f.Field(0).String()
+			if f.Field(1).Bool() && f.Field(0).String() != ""{
+				v = strings.TrimSpace(f.Field(0).String())
 			} else {
 				continue
 			}
