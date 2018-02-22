@@ -13,6 +13,12 @@ const (
 	rabbitConnection = "amqp://guest:guest@audit-mq:5672/"
 )
 
+var (
+	dumplogAudit = &userCommand{}
+
+	emptiedQueues = make(chan int)
+)
+
 func initQueues() {
 
 	var err error
@@ -35,6 +41,21 @@ func initQueues() {
 	go receiveUser(rmqConn)
 	go receiveTransaction(rmqConn)
 	go receiveQuote(rmqConn)
+	go dumpLogReady(emptiedQueues)
+}
+
+func dumpLogReady(msg <-chan int) {
+	var queuesFinished = 0
+	for range msg {
+		queuesFinished++
+		fmt.Println("WOW dumplog COMMMIN UP", queuesFinished)
+		if queuesFinished == 4 {
+			//fmt.Println(dumplogAudit, "fdnjafndjajkflnjalfndajknfdljandl")
+			userCommandHandler(*dumplogAudit) //log the command to dump
+			dumpLogCommand()                  //big dump
+		}
+	}
+
 }
 
 func receiveError(c *amqp.Connection) {
@@ -72,7 +93,12 @@ func receiveError(c *amqp.Connection) {
 			a := errorEvent{}
 			err := json.Unmarshal(d.Body, &a)
 
-			if err == nil {
+			if err != nil {
+				fmt.Println("marshal error")
+			}
+			if a.Username == "DUMPLOG" {
+				emptiedQueues <- 1
+			} else if err == nil {
 				errorEventHandler(a)
 			}
 		}
@@ -116,7 +142,16 @@ func receiveUser(c *amqp.Connection) {
 			a := userCommand{}
 			err := json.Unmarshal(d.Body, &a)
 
-			if err == nil {
+			if err != nil {
+				fmt.Println("marshal error")
+			}
+
+			if a.Command == "DUMPLOG" {
+				emptiedQueues <- 1
+				dumplogAudit = &a
+				broadcastDumplog(c)
+				fmt.Println(dumplogAudit, "Fdfdafdada")
+			} else if err == nil {
 				userCommandHandler(a)
 
 			}
@@ -159,9 +194,15 @@ func receiveTransaction(c *amqp.Connection) {
 		for d := range msgs {
 
 			a := accountTransaction{}
+
 			err := json.Unmarshal(d.Body, &a)
 
-			if err == nil {
+			if err != nil {
+				fmt.Println("marshal error")
+			}
+			if a.Username == "DUMPLOG" {
+				emptiedQueues <- 1
+			} else if err == nil {
 				accountTransactionHandler(a)
 			}
 		}
@@ -204,15 +245,73 @@ func receiveQuote(c *amqp.Connection) {
 
 			a := quoteServer{}
 			err := json.Unmarshal(d.Body, &a)
-
-			fmt.Println("quote mq got", err)
-
-			if err == nil {
-				fmt.Println("quote mq got")
+			if err != nil {
+				fmt.Println("marshal error")
+			}
+			if a.Username == "DUMPLOG" {
+				emptiedQueues <- 1
+			} else if err == nil {
 				quoteServerHandler(a)
 			}
 		}
 	}()
 
 	<-forever
+}
+
+func broadcastDumplog(c *amqp.Connection) {
+
+	m := errorEvent{Username: "DUMPLOG"}
+	body, merr := json.Marshal(m)
+
+	if merr != nil {
+		fmt.Println("marshal error")
+	}
+
+	ch, err := c.Channel()
+	failOnError(err, "Failed to open a channel")
+	defer ch.Close()
+
+	err = ch.Publish(
+		"",            // exchange
+		"error_queue", // routing key
+		false,         // mandatory
+		false,         // immediate
+		amqp.Publishing{
+			ContentType:     "application/json",
+			ContentEncoding: "",
+			Body:            []byte(body),
+		})
+	failOnError(err, "Failed to publish error mq")
+
+	a := accountTransaction{Username: "DUMPLOG"}
+	body, merr = json.Marshal(a)
+
+	err = ch.Publish(
+		"",                  // exchange
+		"transaction_queue", // routing key
+		false,               // mandatory
+		false,               // immediate
+		amqp.Publishing{
+			ContentType:     "application/json",
+			ContentEncoding: "",
+			Body:            []byte(body),
+		})
+	failOnError(err, "Failed to publish error mq")
+
+	q := quoteServer{Username: "DUMPLOG"}
+	body, merr = json.Marshal(q)
+
+	err = ch.Publish(
+		"",            // exchange
+		"quote_queue", // routing key
+		false,         // mandatory
+		false,         // immediate
+		amqp.Publishing{
+			ContentType:     "application/json",
+			ContentEncoding: "",
+			Body:            []byte(body),
+		})
+	failOnError(err, "Failed to publish error mq")
+
 }
