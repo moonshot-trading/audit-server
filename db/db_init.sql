@@ -11,11 +11,14 @@ BEGIN
 END
 $body$;
 
+ALTER USER moonshot WITH SUPERUSER;
 DROP DATABASE IF EXISTS  "moonshot-audit";
 CREATE DATABASE "moonshot-audit";
 GRANT ALL PRIVILEGES ON DATABASE "moonshot-audit" TO moonshot;
 
 \connect moonshot-audit
+
+SET SYNCHRONOUS_COMMIT TO OFF; -- ;)
 
 CREATE TYPE command AS ENUM (
   'ADD',

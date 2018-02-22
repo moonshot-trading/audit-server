@@ -34,21 +34,19 @@ type logDB struct {
 }
 
 type userCommand struct {
-	Timestamp		int64		`json:"timestamp"`
 	Server			string		`json:"server"`
 	TransactionNum	int			`json:"transactionNum"`
 	Command			string		`json:"command"`
 	Username		string		`json:"username"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Filename		string		`json:"filename"`
-	Funds			float64		`json:"funds"`
+	Funds			int		`json:"funds"`
 }
 
 type quoteServer struct {
-	Timestamp		int64		`json:"timestamp"`
 	Server			string		`json:"server"`
 	TransactionNum	int			`json:"transactionNum"`
-	Price			float64		`json:"price"`
+	Price			int		`json:"price"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Username		string		`json:"username"`
 	QuoteServerTime	int64		`json:"quoteServerTime"`
@@ -56,45 +54,41 @@ type quoteServer struct {
 }
 
 type accountTransaction struct {
-	Timestamp		int64		`json:"timestamp"`
 	Server			string		`json:"server"`
 	TransactionNum	int			`json:"transactionNum"`
 	Action			string		`json:"action"`
 	Username		string		`json:"username"`
-	Funds			float64		`json:"funds"`
+	Funds			int		`json:"funds"`
 }
 
 type systemEvent struct {
-	Timestamp		int64		`json:"timestamp"`
 	Server			string		`json:"server"`
 	TransactionNum	int			`json:"transactionNum"`
 	Command			string		`json:"command"`
 	Username		string		`json:"username"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Filename		string		`json:"filename"`
-	Funds			float64		`json:"funds"`
+	Funds			int		`json:"funds"`
 }
 
 type errorEvent	struct {
-	Timestamp		int64		`json:"timestamp"`
 	Server			string		`json:"server"`
 	TransactionNum	int			`json:"transactionNum"`
 	Command			string		`json:"command"`
 	Username		string		`json:"username"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Filename		string		`json:"filename"`
-	Funds			float64		`json:"funds"`
+	Funds			int		`json:"funds"`
 	ErrorMessage	string		`json:"errorMessage"`
 }
 
 type debugEvent	struct {
-	Timestamp		int64		`json:"timestamp"`
 	Server			string		`json:"server"`
 	TransactionNum	int			`json:"transactionNum"`
 	Command			string		`json:"command"`
 	Username		string		`json:"username"`
 	StockSymbol		string		`json:"stockSymbol"`
 	Filename		string		`json:"filename"`
-	Funds			float64		`json:"funds"`
+	Funds			int		`json:"funds"`
 	DebugMessage	string		`json:"debugMessage"`
 }
