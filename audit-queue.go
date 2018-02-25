@@ -51,8 +51,18 @@ func dumpLogReady(msg <-chan int) {
 		fmt.Println("WOW dumplog COMMMIN UP", queuesFinished)
 		if queuesFinished == 4 {
 			//fmt.Println(dumplogAudit, "fdnjafndjajkflnjalfndajknfdljandl")
-			userCommandHandler(*dumplogAudit) //log the command to dump
-			dumpLogCommand()                  //big dump
+			semaphoreChan <- struct{}
+			go func() {
+				go userCommandHandler(*dumplogAudit) //log the command to dump
+			}()
+			<-semaphoreChan
+
+			semaphoreChan <- struct{}
+			go func() {
+				go dumpLogCommand() //big dump
+			}()
+			<-semaphoreChan
+
 		}
 	}
 
@@ -99,7 +109,13 @@ func receiveError(c *amqp.Connection) {
 			if a.Username == "DUMPLOG" {
 				emptiedQueues <- 1
 			} else if err == nil {
-				errorEventHandler(a)
+
+				semaphoreChan <- struct{}
+				go func() {
+					go errorEventHandler(a)
+				}()
+				<-semaphoreChan
+
 			}
 		}
 	}()
@@ -152,7 +168,12 @@ func receiveUser(c *amqp.Connection) {
 				broadcastDumplog(c)
 				fmt.Println(dumplogAudit, "Fdfdafdada")
 			} else if err == nil {
-				userCommandHandler(a)
+
+				semaphoreChan <- struct{}
+				go func() {
+					go userCommandHandler(a)
+				}()
+				<-semaphoreChan
 
 			}
 		}
@@ -203,7 +224,13 @@ func receiveTransaction(c *amqp.Connection) {
 			if a.Username == "DUMPLOG" {
 				emptiedQueues <- 1
 			} else if err == nil {
-				accountTransactionHandler(a)
+
+				semaphoreChan <- struct{}
+				go func() {
+					go accountTransactionHandler(a)
+				}()
+				<-semaphoreChan
+
 			}
 		}
 	}()
@@ -251,7 +278,13 @@ func receiveQuote(c *amqp.Connection) {
 			if a.Username == "DUMPLOG" {
 				emptiedQueues <- 1
 			} else if err == nil {
-				quoteServerHandler(a)
+
+				semaphoreChan <- struct{}
+				go func() {
+					go quoteServerHandler(a)
+				}()
+				<-semaphoreChan
+
 			}
 		}
 	}()

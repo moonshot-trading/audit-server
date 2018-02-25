@@ -15,7 +15,8 @@ var (
 			return "localhost"
 		}
 	}()}
-	db = loadDB()
+	db            = loadDB()
+	semaphoreChan = make(chan struct{}, 40)
 )
 
 const SERVER = "1"

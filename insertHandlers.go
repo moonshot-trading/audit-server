@@ -58,6 +58,8 @@ func userCommandHandler(d userCommand) {
 
 	res, err := stmt.Exec(d.Server, d.TransactionNum, d.Command, d.Username, d.StockSymbol, d.Filename, d.Funds)
 
+	_ = stmt.Close()
+
 	errorCheck(res, err)
 }
 
@@ -85,6 +87,8 @@ func quoteServerHandler(d quoteServer) {
 	stmt, err := db.Prepare(queryString)
 
 	res, err := stmt.Exec(d.Server, d.TransactionNum, d.Price, d.StockSymbol, d.Username, d.QuoteServerTime, d.Cryptokey)
+
+	_ = stmt.Close()
 
 	errorCheck(res, err)
 }
@@ -114,6 +118,8 @@ func accountTransactionHandler(d accountTransaction) {
 
 	res, err := stmt.Exec(d.Server, d.TransactionNum, d.Action, d.Username, d.Funds)
 
+	_ = stmt.Close()
+
 	errorCheck(res, err)
 }
 
@@ -131,6 +137,8 @@ func systemEventHandler(w http.ResponseWriter, r *http.Request) {
 	stmt, err := db.Prepare(queryString)
 
 	res, err := stmt.Exec(d.Server, d.TransactionNum, d.Command, d.Username, d.StockSymbol, d.Filename, d.Funds)
+
+	_ = stmt.Close()
 
 	checkErrors(res, err, w)
 }
@@ -160,6 +168,8 @@ func errorEventHandler(d errorEvent) {
 
 	res, err := stmt.Exec(d.Server, d.TransactionNum, d.Command, d.Username, d.StockSymbol, d.Filename, d.Funds, d.ErrorMessage)
 
+	_ = stmt.Close()
+
 	errorCheck(res, err)
 }
 
@@ -177,6 +187,8 @@ func debugEventHandler(w http.ResponseWriter, r *http.Request) {
 	stmt, err := db.Prepare(queryString)
 
 	res, err := stmt.Exec(d.Server, d.TransactionNum, d.Command, d.Username, d.StockSymbol, d.Filename, d.Funds, d.DebugMessage)
+
+	_ = stmt.Close()
 
 	checkErrors(res, err, w)
 }
