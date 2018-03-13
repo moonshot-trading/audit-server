@@ -10,13 +10,17 @@ import (
 )
 
 const (
-	rabbitConnection = "amqp://guest:guest@audit-mq:5672/"
+	rabbitConnection = "amqp://guest:guest@192.168.1.143:5672/"
 )
 
 var (
-	dumplogAudit = &userCommand{}
-
-	emptiedQueues = make(chan int)
+	dumplogAudit    = &userCommand{}
+	emptiedQueues   = make(chan int)
+	errorBulk       = []errorEvent{}
+	userBulk        = []userCommand{}
+	transactionBulk = []accountTransaction{}
+	quoteBulk       = []quoteServer{}
+	bulkAmount      = 20
 )
 
 func initQueues() {
@@ -26,7 +30,7 @@ func initQueues() {
 	for i := 0; i < 10; i++ {
 		time.Sleep(time.Duration(i) * time.Second)
 
-		rmqConn, err = amqp.Dial("amqp://guest:guest@audit-mq:5672/")
+		rmqConn, err = amqp.Dial("amqp://guest:guest@192.168.1.143:5672/")
 		if err == nil {
 			break
 		}
@@ -51,17 +55,18 @@ func dumpLogReady(msg <-chan int) {
 		fmt.Println("WOW dumplog COMMMIN UP", queuesFinished)
 		if queuesFinished == 4 {
 			//fmt.Println(dumplogAudit, "fdnjafndjajkflnjalfndajknfdljandl")
-			semaphoreChan <- struct{}{}
-			go func() {
-				go userCommandHandler(*dumplogAudit) //log the command to dump
-			}()
-			<-semaphoreChan
+			userBulk = append(userBulk, *dumplogAudit)
 
-			semaphoreChan <- struct{}{}
-			go func() {
-				go dumpLogCommand() //big dump
-			}()
-			<-semaphoreChan
+			//go func() {
+			userCommandHandler(userBulk) //log the command to dump
+			//<-semaphoreChan
+			//}()
+
+			//semaphoreChan <- struct{}{}
+			//go func() {
+			dumpLogCommand() //big dump
+			//	<-semaphoreChan
+			//}()
 
 		}
 	}
@@ -108,13 +113,14 @@ func receiveError(c *amqp.Connection) {
 			}
 			if a.Username == "DUMPLOG" {
 				emptiedQueues <- 1
+				go errorEventHandler(errorBulk)
+				errorBulk = nil
 			} else if err == nil {
-
-				semaphoreChan <- struct{}{}
-				go func() {
-					go errorEventHandler(a)
-				}()
-				<-semaphoreChan
+				errorBulk = append(errorBulk, a)
+				if len(errorBulk) > bulkAmount {
+					go errorEventHandler(errorBulk)
+					errorBulk = nil
+				}
 
 			}
 		}
@@ -166,14 +172,14 @@ func receiveUser(c *amqp.Connection) {
 				emptiedQueues <- 1
 				dumplogAudit = &a
 				broadcastDumplog(c)
-				fmt.Println(dumplogAudit, "Fdfdafdada")
+				go userCommandHandler(userBulk)
+				userBulk = nil
 			} else if err == nil {
-
-				semaphoreChan <- struct{}{}
-				go func() {
-					go userCommandHandler(a)
-				}()
-				<-semaphoreChan
+				userBulk = append(userBulk, a)
+				if len(userBulk) > bulkAmount {
+					go userCommandHandler(userBulk)
+					userBulk = nil
+				}
 
 			}
 		}
@@ -223,13 +229,15 @@ func receiveTransaction(c *amqp.Connection) {
 			}
 			if a.Username == "DUMPLOG" {
 				emptiedQueues <- 1
+				go accountTransactionHandler(transactionBulk)
+				transactionBulk = nil
 			} else if err == nil {
 
-				semaphoreChan <- struct{}{}
-				go func() {
-					go accountTransactionHandler(a)
-				}()
-				<-semaphoreChan
+				transactionBulk = append(transactionBulk, a)
+				if len(transactionBulk) > bulkAmount {
+					go accountTransactionHandler(transactionBulk)
+					transactionBulk = nil
+				}
 
 			}
 		}
@@ -277,13 +285,14 @@ func receiveQuote(c *amqp.Connection) {
 			}
 			if a.Username == "DUMPLOG" {
 				emptiedQueues <- 1
+				go quoteServerHandler(quoteBulk)
+				quoteBulk = nil
 			} else if err == nil {
-
-				semaphoreChan <- struct{}{}
-				go func() {
-					go quoteServerHandler(a)
-				}()
-				<-semaphoreChan
+				quoteBulk = append(quoteBulk, a)
+				if len(quoteBulk) > bulkAmount {
+					go quoteServerHandler(quoteBulk)
+					quoteBulk = nil
+				}
 
 			}
 		}

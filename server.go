@@ -10,13 +10,14 @@ import (
 var (
 	config = auditConfig{func() string {
 		if runningInDocker() {
-			return "audit-db"
+			return "192.168.1.146"
+			//return "docker.for.mac.localhost"
+			//return "audit-db"
 		} else {
 			return "localhost"
 		}
 	}()}
-	db            = loadDB()
-	semaphoreChan = make(chan struct{}, 40)
+	db = loadDB()
 )
 
 const SERVER = "1"
@@ -35,7 +36,9 @@ func loadDB() *sql.DB {
 		failGracefully(err, "Failed to ping Postgres ")
 	}
 
-	fmt.Println("Connected to DB at " + config.db)
+	if err == nil {
+		fmt.Println("Connected to DB at " + config.db)
+	}
 	return db
 }
 
