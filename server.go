@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	_ "github.com/jackc/pgx/stdlib"
 )
@@ -10,18 +11,15 @@ import (
 var (
 	config = auditConfig{func() string {
 		if runningInDocker() {
-			return "192.168.1.146"
-			//return "docker.for.mac.localhost"
-			//return "audit-db"
+			return os.Getenv("AS_DB_HOST")
 		} else {
 			return "localhost"
 		}
 	}()}
-	db = loadDB()
+	db       = loadDB()
+	SERVER   = os.Getenv("AS_SERVER_ENUM")
+	FILENAME = os.Getenv("FILENAME")
 )
-
-const SERVER = "1"
-const FILENAME = "10userWorkLoad"
 
 func loadDB() *sql.DB {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.db, 5432, "moonshot", "hodl", "moonshot-audit")
