@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	_ "github.com/jackc/pgx/stdlib"
 )
@@ -10,16 +11,15 @@ import (
 var (
 	config = auditConfig{func() string {
 		if runningInDocker() {
-			return "audit-db"
+			return os.Getenv("AS_DB_HOST")
 		} else {
 			return "localhost"
 		}
 	}()}
-	db = loadDB()
+	db       = loadDB()
+	SERVER   = os.Getenv("AS_SERVER_ENUM")
+	FILENAME = os.Getenv("FILENAME")
 )
-
-const SERVER = "1"
-const FILENAME = "10userWorkLoad"
 
 func loadDB() *sql.DB {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.db, 5432, "moonshot", "hodl", "moonshot-audit")
@@ -34,7 +34,9 @@ func loadDB() *sql.DB {
 		failGracefully(err, "Failed to ping Postgres ")
 	}
 
-	fmt.Println("Connected to DB at " + config.db)
+	if err == nil {
+		fmt.Println("Connected to DB at " + config.db)
+	}
 	return db
 }
 
