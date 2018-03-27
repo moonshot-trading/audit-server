@@ -46,3 +46,6 @@ log/*.xml
 #SSL
 *.crt
 *.key
+
+.DS_Store
+*.tar
