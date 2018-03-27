@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	rabbitConnection = "amqp://guest:guest@192.168.1.143:5672/"
+	rabbitConnection = "amqp://guest:guest@audit-mq:5672/"
 )
 
 var (
@@ -54,6 +54,7 @@ func dumpLogReady(msg <-chan int) {
 		queuesFinished++
 		fmt.Println("WOW dumplog COMMMIN UP", queuesFinished)
 		if queuesFinished == 4 {
+			queuesFinished = 0
 			//fmt.Println(dumplogAudit, "fdnjafndjajkflnjalfndajknfdljandl")
 			userBulk = append(userBulk, *dumplogAudit)
 
