@@ -13,15 +13,12 @@ func dumpLogCommand() {
 	//logDumpCommand(w, r)
 	var err error
 	var f *os.File
-	if AlreadyDumped == 2 {
-		f, err = os.Create("log3.xml")
-	} else if AlreadyDumped == 1 {
-		AlreadyDumped = 2
-		f, err = os.Create("log2.xml")
-	} else {
-		AlreadyDumped = 1
-		f, err = os.Create("log.xml")
+	if AlreadyDumped < 14 {
+		AlreadyDumped++
+		return
 	}
+	f, err = os.Create("log.xml")
+
 	if err != nil {
 		failGracefully(err, "Failed to open log file ")
 	}

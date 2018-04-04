@@ -22,6 +22,7 @@ func checkErrors(res sql.Result, err error, w http.ResponseWriter) {
 func errorCheck(res sql.Result, err error) {
 	if err != nil {
 		failGracefully(err, "Error inserting log ")
+		return
 	}
 
 	numRows, err := res.RowsAffected()
@@ -35,11 +36,36 @@ func errorCheck(res sql.Result, err error) {
 var (
 	semaphoreChan = make(chan struct{}, 80)
 
-	errStmt   string = "INSERT INTO audit_log(timestamp, server, transactionnum, command, username, stockSymbol, filename, funds, errorMessage, logType) VALUES (now(), $1, $2, $3, $4, $5, $6, $7, $8, 'errorEvent')"
-	accStmt   string = "INSERT INTO audit_log(timestamp, server, transactionnum, action, username, funds, logtype) VALUES (now(), $1, $2, $3, $4, $5, 'accountTransaction')"
-	quoteStmt string = "INSERT INTO audit_log(timestamp, server, transactionnum, price, stockSymbol, username, quoteServerTime, cryptokey, logType) VALUES (now(), $1, $2, $3, $4, $5, $6, $7, 'quoteServer')"
-	userStmt  string = "INSERT INTO audit_log(timestamp, server, transactionNum, command, username, stockSymbol, filename, funds, logtype) VALUES (now(), $1, $2, $3, $4, $5, $6, $7, 'userCommand')"
+	errString   string = "INSERT INTO audit_log(timestamp, server, transactionnum, command, username, stockSymbol, filename, funds, errorMessage, logType) VALUES (now(), $1, $2, $3, $4, $5, $6, $7, $8, 'errorEvent')"
+	accString   string = "INSERT INTO audit_log(timestamp, server, transactionnum, action, username, funds, logtype) VALUES (now(), $1, $2, $3, $4, $5, 'accountTransaction')"
+	quoteString string = "INSERT INTO audit_log(timestamp, server, transactionnum, price, stockSymbol, username, quoteServerTime, cryptokey, logType) VALUES (now(), $1, $2, $3, $4, $5, $6, $7, 'quoteServer')"
+	userString  string = "INSERT INTO audit_log(timestamp, server, transactionNum, command, username, stockSymbol, filename, funds, logtype) VALUES (now(), $1, $2, $3, $4, $5, $6, $7, 'userCommand')"
+
+	userStmt  *sql.Stmt
+	accStmt   *sql.Stmt
+	errStmt   *sql.Stmt
+	quoteStmt *sql.Stmt
 )
+
+func PrepareStatements() {
+	var prepError error
+	userStmt, prepError = db.Prepare(userString)
+	if prepError != nil {
+		failGracefully(prepError, "Unable to prepare user statement")
+	}
+	accStmt, prepError = db.Prepare(accString)
+	if prepError != nil {
+		failGracefully(prepError, "Unable to prepare acc statement")
+	}
+	errStmt, prepError = db.Prepare(errString)
+	if prepError != nil {
+		failGracefully(prepError, "Unable to prepare err statement")
+	}
+	quoteStmt, prepError = db.Prepare(quoteString)
+	if prepError != nil {
+		failGracefully(prepError, "Unable to prepare quote statement")
+	}
+}
 
 // func userCommandHandler(w http.ResponseWriter, r *http.Request) {
 // 	decoder := json.NewDecoder(r.Body)
@@ -89,17 +115,17 @@ func bulkInsertUser(u []userCommand) {
 	// 	failGracefully(err, "Error inserting log ")
 	// }
 
-	stmt, err := db.Prepare(userStmt)
-	if err != nil {
-		log.Fatal(err)
+	//stmt, err := db.Prepare(userStmt)
+	if userStmt == nil {
+		log.Fatal("no user statement")
 	}
 
 	for _, d := range u {
-		res, err := stmt.Exec(d.Server, d.TransactionNum, d.Command, d.Username, d.StockSymbol, d.Filename, d.Funds)
+		res, err := userStmt.Exec(d.Server, d.TransactionNum, d.Command, d.Username, d.StockSymbol, d.Filename, d.Funds)
 		errorCheck(res, err)
 	}
 
-	stmt.Close()
+	//stmt.Close()
 }
 
 // func userCommandHandler(d userCommand) {
@@ -154,17 +180,17 @@ func bulkInsertQuote(u []quoteServer) {
 	// if err2 != nil {
 	// 	failGracefully(err, "Error inserting log ")
 	// }
-	stmt, err := db.Prepare(quoteStmt)
-	if err != nil {
-		log.Fatal(err)
+	//stmt, err := db.Prepare(quoteStmt)
+	if quoteStmt == nil {
+		log.Fatal("no quote statement")
 	}
 
 	for _, d := range u {
-		res, err := stmt.Exec(d.Server, d.TransactionNum, d.Price, d.StockSymbol, d.Username, d.QuoteServerTime, d.Cryptokey)
+		res, err := quoteStmt.Exec(d.Server, d.TransactionNum, d.Price, d.StockSymbol, d.Username, d.QuoteServerTime, d.Cryptokey)
 		errorCheck(res, err)
 	}
 
-	stmt.Close()
+	//stmt.Close()
 }
 
 func quoteServerHandler(d []quoteServer) {
@@ -239,18 +265,18 @@ func bulkInsertTransaction(u []accountTransaction) {
 	// 	failGracefully(err, "Error inserting log ")
 	// }
 	//fmt.Println("meme", u)
-	stmt, err := db.Prepare(accStmt)
-	if err != nil {
-		log.Fatal(err)
+	//stmt, err := db.Prepare(accStmt)
+	if accStmt == nil {
+		log.Fatal("no acc statement")
 	}
 
 	for _, d := range u {
 		//fmt.Println("FDasfdadaf", d.Server)
-		res, err := stmt.Exec(d.Server, d.TransactionNum, d.Action, d.Username, d.Funds)
+		res, err := accStmt.Exec(d.Server, d.TransactionNum, d.Action, d.Username, d.Funds)
 		errorCheck(res, err)
 	}
 
-	stmt.Close()
+	//stmt.Close()
 
 }
 
@@ -342,17 +368,17 @@ func bulkInsertError(u []errorEvent) {
 	// 	failGracefully(err, "Error inserting log ")
 	// }
 
-	stmt, err := db.Prepare(errStmt)
-	if err != nil {
-		log.Fatal(err)
+	//stmt, err := db.Prepare(errStmt)
+	if errStmt == nil {
+		log.Fatal("no error statement")
 	}
 
 	for _, d := range u {
-		res, err := stmt.Exec(d.Server, d.TransactionNum, d.Command, d.Username, d.StockSymbol, d.Filename, d.Funds, d.ErrorMessage)
+		res, err := errStmt.Exec(d.Server, d.TransactionNum, d.Command, d.Username, d.StockSymbol, d.Filename, d.Funds, d.ErrorMessage)
 		errorCheck(res, err)
 	}
 
-	stmt.Close()
+	//stmt.Close()
 }
 
 func errorEventHandler(d []errorEvent) {

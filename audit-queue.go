@@ -20,7 +20,7 @@ var (
 	userBulk        = []userCommand{}
 	transactionBulk = []accountTransaction{}
 	quoteBulk       = []quoteServer{}
-	bulkAmount      = 20
+	bulkAmount      = 50
 )
 
 func initQueues() {

@@ -22,6 +22,7 @@ var (
 )
 
 func loadDB() *sql.DB {
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.db, 5432, "moonshot", "hodl", "moonshot-audit")
 
 	db, err := sql.Open("pgx", psqlInfo)
@@ -41,6 +42,8 @@ func loadDB() *sql.DB {
 }
 
 func main() {
+	PrepareStatements()
+
 	initQueues()
 	initRoutes()
 }
