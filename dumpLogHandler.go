@@ -113,6 +113,60 @@ func dumpLogUserHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("User Log Dumped")
 }
 
+func displaySummaryHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	res := struct {
+		Username       string `json:"username"`
+		TransactionNum int    `json:"transactionNum"`
+		Filename       string `json:"filename"`
+		Server         string `json:"server"`
+	}{"", 1, FILENAME, SERVER }
+	err := decoder.Decode(&res)
+	if err != nil {
+		failWithStatusCode(err, http.StatusText(http.StatusBadRequest), w, http.StatusBadRequest)
+		return
+	}
+
+	queryString := "INSERT INTO audit_log(timestamp, username, transactionnum, server, command, filename, logtype) VALUES (now(), $1, $2, $3, $4, $5, 'userCommand')"
+	stmt,  err := db.Prepare(queryString)
+	resdb, err := stmt.Exec(res.Username, res.TransactionNum, res.Server, "DISPLAY_SUMMARY", res.Filename)
+	checkErrors(resdb, err, w)
+
+	queryString = "SELECT logType, (extract(EPOCH FROM timestamp) * 1000)::BIGINT as timestamp, server, transactionNum, command, username, stockSymbol, filename, (funds::DECIMAL)/100 as funds, cryptokey, (price::DECIMAL)/100 as price, quoteServerTime, action, errorMessage, debugMessage FROM audit_log WHERE username = $1;"
+	stmt, err = db.Prepare(queryString)
+
+	rows, err := stmt.Query(res.Username)
+	if err != nil {
+		failGracefully(err, "failed to query audit db for display summary")
+		return
+	}
+
+	userLogs := struct {
+		Username string `json:"username"`
+		Logs []logEntry `json:"logs"`
+	}{res.Username,[]logEntry{}}
+
+	for rows.Next() {
+		var l logDB
+		err = rows.Scan(&l.LogType, &l.Timestamp, &l.Server, &l.TransactionNum, &l.Command, &l.Username, &l.StockSymbol, &l.Filename, &l.Funds, &l.Cryptokey, &l.Price, &l.QuoteServerTime, &l.Action, &l.ErrorMessage, &l.DebugMessage)
+		if err != nil {
+			failGracefully(err, "failed to query audit db for display summary")
+			return
+		}
+		userLogs.Logs = append(userLogs.Logs, structToMap(&l))
+	}
+
+	userJson, err := json.Marshal(userLogs)
+	if err != nil {
+		failGracefully(err, "failed to marshal json for display summary")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(userJson)
+
+}
+
 func logDumpCommand(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
@@ -134,3 +188,4 @@ func logDumpCommand(w http.ResponseWriter, r *http.Request) {
 	DBres, err := stmt.Exec(res.TransactionNum, res.Server, "DUMPLOG", res.Filename)
 	checkErrors(DBres, err, w)
 }
+
